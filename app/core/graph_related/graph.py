@@ -13,6 +13,7 @@ from constants.constants import (
     TWITTER_PREPROCESSED_DATA,
     GRAPH_PATH,
     device,
+    seed,
 )
 from app.utils.utility import get_data
 from app.core.graph_related.create_edges import (
@@ -140,7 +141,6 @@ def split_graph(data_type: str, train_ratio: float = 0.8):
         )
         print(f"Graph loaded successfully from {GRAPH_PATH}.")
         print(f"Graph data: {graph_data}")
-        seed = 42  # Set a seed for reproducibility
         torch.manual_seed(seed)
         random.seed(seed)
         np.random.seed(seed)
@@ -149,10 +149,53 @@ def split_graph(data_type: str, train_ratio: float = 0.8):
         splitter = RandomNodeSplit(split="train_rest", num_val=0.2, num_test=0.2)
         splitted_graph_data = splitter(graph_data)
         print(f"Graph data after splitting: {splitted_graph_data}")
+
         torch.save(
             splitted_graph_data,
             os.path.join(GRAPH_PATH, f"graph_{data_type}_splitted.pt"),
         )
+
+        # Get text from the feature embeddings of training, validation and test set and save in csv file with labels
+        if data_type == "twitter":
+            preprocessed_data = get_data(TWITTER_PREPROCESSED_DATA)
+        elif data_type == "geotext":
+            preprocessed_data = get_data(GEOTEXT_PREPROCESSED_DATA)
+
+        train_indices = splitted_graph_data.train_mask.nonzero(as_tuple=True)[0]
+        val_indices = splitted_graph_data.val_mask.nonzero(as_tuple=True)[0]
+        test_indices = splitted_graph_data.test_mask.nonzero(as_tuple=True)[0]
+
+        train_texts = preprocessed_data.iloc[train_indices]["feature"].tolist()
+        train_labels = preprocessed_data.iloc[train_indices]["label"].tolist()
+
+        val_texts = preprocessed_data.iloc[val_indices]["feature"].tolist()
+        val_labels = preprocessed_data.iloc[val_indices]["label"].tolist()
+
+        test_texts = preprocessed_data.iloc[test_indices]["feature"].tolist()
+        test_labels = preprocessed_data.iloc[test_indices]["label"].tolist()
+
+        # Save the train, validation and test data in csv files
+        train_df = pd.DataFrame(
+            {"indices": train_indices, "feature": train_texts, "label": train_labels}
+        )
+        train_df.to_csv(
+            os.path.join(GRAPH_PATH, f"graph_{data_type}_train_data.csv"), index=False
+        )
+
+        val_df = pd.DataFrame(
+            {"indices": val_indices, "feature": val_texts, "label": val_labels}
+        )
+        val_df.to_csv(
+            os.path.join(GRAPH_PATH, f"graph_{data_type}_val_data.csv"), index=False
+        )
+
+        test_df = pd.DataFrame(
+            {"indices": test_indices, "feature": test_texts, "label": test_labels}
+        )
+        test_df.to_csv(
+            os.path.join(GRAPH_PATH, f"graph_{data_type}_test_data.csv"), index=False
+        )
+
         return True
     except Exception as e:
         print(f"An error occurred while splitting graph: {e}")

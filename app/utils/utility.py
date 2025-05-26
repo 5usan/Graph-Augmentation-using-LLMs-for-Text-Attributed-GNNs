@@ -1,7 +1,9 @@
 import re
+import torch
 import contractions
 import unicodedata
 import pandas as pd
+from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 
 
 def get_data(file_path: str) -> pd.DataFrame:
@@ -81,3 +83,18 @@ def create_csv(dataframe, filename):
         print(f"CSV file {filename} created successfully.")
     except Exception as e:
         print(f"An error occurred while creating CSV: {e}")
+
+
+def compute_metrics(eval_pred):
+    logits, labels = eval_pred
+    preds = (
+        (torch.sigmoid(torch.tensor(logits)) > 0.5).numpy().astype(int)
+    )  # Convert logits to binary predictions
+    labels = labels.astype(int)
+
+    acc = accuracy_score(labels, preds)
+    precision, recall, f1, _ = precision_recall_fscore_support(
+        labels, preds, average="binary", zero_division=1
+    )
+
+    return {"accuracy": acc, "precision": precision, "recall": recall, "f1": f1}

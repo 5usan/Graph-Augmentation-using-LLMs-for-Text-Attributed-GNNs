@@ -17,4 +17,8 @@ GRAPH_PATH = os.path.join(os.getcwd(), "data", "graph_data")
 GRAPH_MODEL_PATH = os.path.join(os.getcwd(), "models", "graph_models")
 LANGUAGE_MODEL_PATH = os.path.join(os.getcwd(), "models", "lm_models")
 
+LM_DATA_PATH = os.path.join(os.getcwd(), "data", "lm_data")
+
 device = "cuda" if torch.cuda.is_available() else "cpu"
+
+seed = 42  # Random seed for reproducibility
