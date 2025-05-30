@@ -8,6 +8,7 @@ from .constants import (
     GRAPH_MODEL_PATH,
     LANGUAGE_MODEL_PATH,
     LM_DATA_PATH,
+    LM_TRAINING_RESULT_PATH,
     device,
     seed
 )

@@ -54,7 +54,7 @@ def evaluate(graph_data, model, test=False):
         return acc, precision, recall, f1
 
 
-def train_eval_model(data_type: str, model_type: str = "gcn"):
+def train_eval_model(data_type: str, model_type: str = "gcn", epochs: int = 200, learning_rate: float = 0.01):
     """
     Train and evaluate the GCN model.
     Args:
@@ -66,7 +66,7 @@ def train_eval_model(data_type: str, model_type: str = "gcn"):
             print(
                 "Invalid model type. Supported types are 'gcn' and 'gat'. Defaulting to 'gcn'."
             )
-        hidden_dim = 16
+        hidden_dim = 32
         output_dim = 2 if data_type == "geotext" else 1
         graph_data = torch.load(
             os.path.join(GRAPH_PATH, f"graph_{data_type}_splitted.pt"),
@@ -83,9 +83,8 @@ def train_eval_model(data_type: str, model_type: str = "gcn"):
             if model_type == "gat"
             else GCN(input_dim, hidden_dim, output_dim).to(device)
         )
-        optimizer = torch.optim.Adam(model.parameters(), lr=0.01, weight_decay=5e-4)
+        optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=5e-4)
         loss_fn = torch.nn.BCEWithLogitsLoss()  # Binary classification loss
-        epochs = 200
         best_val_acc = 0
         patience = 50  # Stop if validation accuracy does not improve for 10 epochs
         wait = 0

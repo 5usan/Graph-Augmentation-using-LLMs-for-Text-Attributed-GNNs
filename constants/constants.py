@@ -21,4 +21,8 @@ LM_DATA_PATH = os.path.join(os.getcwd(), "data", "lm_data")
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
+LM_TRAINING_RESULT_PATH = os.path.join(
+    os.getcwd(), "results", "lm_training_results"
+)
+
 seed = 42  # Random seed for reproducibility

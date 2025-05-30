@@ -3,7 +3,7 @@ import torch
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 
-from app.models.language_models import bert_tokenizer, tokenizer_function
+from app.models.language_models import bert_tokenizer, distilbert_tokenizer, roberta_tokenizer, tokenizer_function
 from app.dataset.twitter_dataset import TwitterDataset
 
 from constants import (
@@ -72,7 +72,7 @@ def split_data(data_type: str):
         return {"error": str(e)}
 
 
-def create_data(data_type: str):
+def create_data(data_type: str, model: str = "bert"):
     """
     Creates a dataset by splitting the data into training, validation, and test sets.
 
@@ -92,13 +92,15 @@ def create_data(data_type: str):
         val_data = pd.read_csv(val_data_path)
         test_data = pd.read_csv(test_data_path)
         print(f"Loaded data for {data_type}")
-
-        train_encodings = tokenizer_function(
-            train_data["feature"].tolist(), bert_tokenizer
+        tokenizer = distilbert_tokenizer if model == "distillbert" else (
+            roberta_tokenizer if model == "roberta" else tokenizer
         )
-        val_encodings = tokenizer_function(val_data["feature"].tolist(), bert_tokenizer)
+        train_encodings = tokenizer_function(
+            train_data["feature"].tolist(), tokenizer
+        )
+        val_encodings = tokenizer_function(val_data["feature"].tolist(), tokenizer)
         test_encodings = tokenizer_function(
-            test_data["feature"].tolist(), bert_tokenizer
+            test_data["feature"].tolist(), tokenizer
         )
         print("Tokenization completed.")
 
@@ -107,9 +109,9 @@ def create_data(data_type: str):
         test_dataset = TwitterDataset(test_encodings, test_data["label"].tolist())
 
         # Saving the datasets
-        train_dataset_path = os.path.join(LM_DATA_PATH, f"{data_type}_train_dataset.pt")
-        val_dataset_path = os.path.join(LM_DATA_PATH, f"{data_type}_val_dataset.pkl")
-        test_dataset_path = os.path.join(LM_DATA_PATH, f"{data_type}_test_dataset.pkl")
+        train_dataset_path = os.path.join(LM_DATA_PATH, f"{data_type}_train_dataset_{model}.pt")
+        val_dataset_path = os.path.join(LM_DATA_PATH, f"{data_type}_val_dataset_{model}.pt")
+        test_dataset_path = os.path.join(LM_DATA_PATH, f"{data_type}_test_dataset_{model}.pt")
         torch.save(train_dataset, train_dataset_path)
         torch.save(val_dataset, val_dataset_path)
         torch.save(test_dataset, test_dataset_path)
