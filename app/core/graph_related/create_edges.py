@@ -32,6 +32,12 @@ def build_edges(data, feature_embeddings, threshold=0.5):
                     if similarity_matrix[i][j] > threshold:
                         edges.append((i, j))
                         edges.append((j, i))
+        # Save edges to CSV
+        edges_df = pd.DataFrame(edges, columns=["source", "target"])
+        create_csv(
+            edges_df,
+            os.path.join(EDGE_PATH, f"edges_cosine_similarity_{threshold}.csv"),
+        )
         print("Edges built successfully.")
         return edges
     except Exception as e:

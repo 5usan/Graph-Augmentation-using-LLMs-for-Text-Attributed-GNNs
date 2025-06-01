@@ -115,7 +115,7 @@ def generate_graph(data_type: str):
 
         # Create graph
         graph = Data(x=node_features, edge_index=edge_index, y=node_labels)
-        print("Graph created successfully.")
+        print(f"Graph created successfully: {graph}")
         torch.save(graph, os.path.join(GRAPH_PATH, f"graph_{data_type}.pt"))
         return graph
     except Exception as e:

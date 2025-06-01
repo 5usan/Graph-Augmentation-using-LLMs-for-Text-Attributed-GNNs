@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+from app.scripts.train_eval import train_eval_model
 from app.core.graph_related.graph import generate_graph, split_graph
 
 router = APIRouter()
@@ -40,7 +41,12 @@ def split_graph_endpoint(data_type: str):
 
 
 @router.get("/train_eval_model")
-def train_eval_model_endpoint(data_type: str, model_type: str = "gcn"):
+def train_eval_model_endpoint(
+    data_type: str,
+    model_type: str = "gcn",
+    epochs: int = 200,
+    learning_rate: float = 0.01,
+):
     """
     Endpoint to train and evaluate the GCN model.
      Args:
@@ -55,9 +61,8 @@ def train_eval_model_endpoint(data_type: str, model_type: str = "gcn"):
             return {
                 "error": "Invalid model type. Supported types are 'gcn' and 'gat'. Defaulting to 'gcn'."
             }
-        from app.scripts.train_eval import train_eval_model
 
-        train_eval_model(data_type)
+        train_eval_model(data_type, model_type, epochs, learning_rate)
         return {"message": "Model trained and evaluated successfully."}
     except Exception as e:
         return {"error": str(e)}
