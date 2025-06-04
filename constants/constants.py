@@ -22,7 +22,7 @@ TWITTER_LANGUAGE_MODEL_PATH = os.path.join(os.getcwd(), "models", "twitter", "lm
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 TWITTER_LM_TRAINING_RESULT_PATH = os.path.join(
-    os.getcwd(), "results", "lm_training_results"
+    os.getcwd(), "results", "twitter", "lm_training_results"
 )
 
 seed = 42  # Random seed for reproducibility
