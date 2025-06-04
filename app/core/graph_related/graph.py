@@ -11,7 +11,7 @@ from torch_geometric.transforms import RandomNodeSplit, RandomLinkSplit
 from constants.constants import (
     GEOTEXT_PREPROCESSED_DATA,
     TWITTER_PREPROCESSED_DATA,
-    GRAPH_PATH,
+    TWITTER_GRAPH_PATH,
     device,
     seed,
 )
@@ -116,7 +116,7 @@ def generate_graph(data_type: str):
         # Create graph
         graph = Data(x=node_features, edge_index=edge_index, y=node_labels)
         print(f"Graph created successfully: {graph}")
-        torch.save(graph, os.path.join(GRAPH_PATH, f"graph_{data_type}.pt"))
+        torch.save(graph, os.path.join(TWITTER_GRAPH_PATH, f"graph_{data_type}.pt"))
         return graph
     except Exception as e:
         return {"error": str(e)}
@@ -136,10 +136,10 @@ def split_graph(data_type: str, train_ratio: float = 0.8):
     try:
         # Load the graph
         graph_data = torch.load(
-            os.path.join(GRAPH_PATH, f"graph_{data_type}.pt"),
+            os.path.join(TWITTER_GRAPH_PATH, f"graph_{data_type}.pt"),
             map_location=torch.device(device),
         )
-        print(f"Graph loaded successfully from {GRAPH_PATH}.")
+        print(f"Graph loaded successfully from {TWITTER_GRAPH_PATH}.")
         print(f"Graph data: {graph_data}")
         torch.manual_seed(seed)
         random.seed(seed)
@@ -152,7 +152,7 @@ def split_graph(data_type: str, train_ratio: float = 0.8):
 
         torch.save(
             splitted_graph_data,
-            os.path.join(GRAPH_PATH, f"graph_{data_type}_splitted.pt"),
+            os.path.join(TWITTER_GRAPH_PATH, f"graph_{data_type}_splitted.pt"),
         )
 
         # Get text from the feature embeddings of training, validation and test set and save in csv file with labels
@@ -179,21 +179,21 @@ def split_graph(data_type: str, train_ratio: float = 0.8):
             {"indices": train_indices, "feature": train_texts, "label": train_labels}
         )
         train_df.to_csv(
-            os.path.join(GRAPH_PATH, f"graph_{data_type}_train_data.csv"), index=False
+            os.path.join(TWITTER_GRAPH_PATH, f"graph_{data_type}_train_data.csv"), index=False
         )
 
         val_df = pd.DataFrame(
             {"indices": val_indices, "feature": val_texts, "label": val_labels}
         )
         val_df.to_csv(
-            os.path.join(GRAPH_PATH, f"graph_{data_type}_val_data.csv"), index=False
+            os.path.join(TWITTER_GRAPH_PATH, f"graph_{data_type}_val_data.csv"), index=False
         )
 
         test_df = pd.DataFrame(
             {"indices": test_indices, "feature": test_texts, "label": test_labels}
         )
         test_df.to_csv(
-            os.path.join(GRAPH_PATH, f"graph_{data_type}_test_data.csv"), index=False
+            os.path.join(TWITTER_GRAPH_PATH, f"graph_{data_type}_test_data.csv"), index=False
         )
 
         return True

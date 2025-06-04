@@ -2,7 +2,7 @@ import os
 import torch
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
-from constants import GRAPH_PATH, GRAPH_MODEL_PATH, device
+from constants import TWITTER_GRAPH_PATH, TWITTER_GRAPH_MODEL_PATH, device
 from app.models.graph_models import GCN, GAT
 
 
@@ -69,7 +69,7 @@ def train_eval_model(data_type: str, model_type: str = "gcn", epochs: int = 200,
         hidden_dim = 32
         output_dim = 2 if data_type == "geotext" else 1
         graph_data = torch.load(
-            os.path.join(GRAPH_PATH, f"graph_{data_type}_splitted.pt"),
+            os.path.join(TWITTER_GRAPH_PATH, f"graph_{data_type}_splitted.pt"),
             map_location=torch.device(device),
         )
         if graph_data is None:
@@ -89,7 +89,7 @@ def train_eval_model(data_type: str, model_type: str = "gcn", epochs: int = 200,
         patience = 50  # Stop if validation accuracy does not improve for 10 epochs
         wait = 0
         saved_model_path = os.path.join(
-            GRAPH_MODEL_PATH, f"{model_type}_{data_type}_model.pt"
+            TWITTER_GRAPH_MODEL_PATH, f"{model_type}_{data_type}_model.pt"
         )
         for epoch in range(epochs):
             loss = train(model, optimizer, loss_fn, graph_data)

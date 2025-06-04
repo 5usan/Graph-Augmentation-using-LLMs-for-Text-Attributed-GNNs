@@ -7,8 +7,8 @@ from app.models.language_models import bert_tokenizer, distilbert_tokenizer, rob
 from app.dataset.twitter_dataset import TwitterDataset
 
 from constants import (
-    GRAPH_PATH,
-    LM_DATA_PATH,
+    TWITTER_GRAPH_PATH,
+    TWITTER_LM_DATA_PATH,
 )
 
 
@@ -40,9 +40,9 @@ def split_data(data_type: str):
     try:
         if data_type not in ["twitter", "geotext"]:
             return {"error": "Invalid data type. Choose either 'twitter' or 'geotext'."}
-        train_data_path = os.path.join(GRAPH_PATH, f"graph_{data_type}_train_data.csv")
-        val_data_path = os.path.join(GRAPH_PATH, f"graph_{data_type}_val_data.csv")
-        test_data_path = os.path.join(GRAPH_PATH, f"graph_{data_type}_test_data.csv")
+        train_data_path = os.path.join(TWITTER_GRAPH_PATH, f"graph_{data_type}_train_data.csv")
+        val_data_path = os.path.join(TWITTER_GRAPH_PATH, f"graph_{data_type}_val_data.csv")
+        test_data_path = os.path.join(TWITTER_GRAPH_PATH, f"graph_{data_type}_test_data.csv")
         train_dataset = pd.read_csv(train_data_path)
         val_dataset = pd.read_csv(val_data_path)
         test_dataset = pd.read_csv(test_data_path)
@@ -55,9 +55,9 @@ def split_data(data_type: str):
         test_label_encoded = label_encode_data(test_dataset)
         print("Labels encoded successfully.")
 
-        train_path = os.path.join(LM_DATA_PATH, f"{data_type}_train_data.csv")
-        val_path = os.path.join(LM_DATA_PATH, f"{data_type}_val_data.csv")
-        test_path = os.path.join(LM_DATA_PATH, f"{data_type}_test_data.csv")
+        train_path = os.path.join(TWITTER_LM_DATA_PATH, f"{data_type}_train_data.csv")
+        val_path = os.path.join(TWITTER_LM_DATA_PATH, f"{data_type}_val_data.csv")
+        test_path = os.path.join(TWITTER_LM_DATA_PATH, f"{data_type}_test_data.csv")
 
         train_label_encoded.to_csv(train_path)
         val_label_encoded.to_csv(val_path)
@@ -84,16 +84,16 @@ def create_data(data_type: str, model: str = "bert"):
         if data_type not in ["twitter", "geotext"]:
             return {"error": "Invalid data type. Choose either 'twitter' or 'geotext'."}
 
-        train_data_path = os.path.join(LM_DATA_PATH, f"{data_type}_train_data.csv")
-        val_data_path = os.path.join(LM_DATA_PATH, f"{data_type}_val_data.csv")
-        test_data_path = os.path.join(LM_DATA_PATH, f"{data_type}_test_data.csv")
+        train_data_path = os.path.join(TWITTER_LM_DATA_PATH, f"{data_type}_train_data.csv")
+        val_data_path = os.path.join(TWITTER_LM_DATA_PATH, f"{data_type}_val_data.csv")
+        test_data_path = os.path.join(TWITTER_LM_DATA_PATH, f"{data_type}_test_data.csv")
 
         train_data = pd.read_csv(train_data_path)
         val_data = pd.read_csv(val_data_path)
         test_data = pd.read_csv(test_data_path)
         print(f"Loaded data for {data_type}")
         tokenizer = distilbert_tokenizer if model == "distillbert" else (
-            roberta_tokenizer if model == "roberta" else tokenizer
+            roberta_tokenizer if model == "roberta" else bert_tokenizer
         )
         train_encodings = tokenizer_function(
             train_data["feature"].tolist(), tokenizer
@@ -109,9 +109,9 @@ def create_data(data_type: str, model: str = "bert"):
         test_dataset = TwitterDataset(test_encodings, test_data["label"].tolist())
 
         # Saving the datasets
-        train_dataset_path = os.path.join(LM_DATA_PATH, f"{data_type}_train_dataset_{model}.pt")
-        val_dataset_path = os.path.join(LM_DATA_PATH, f"{data_type}_val_dataset_{model}.pt")
-        test_dataset_path = os.path.join(LM_DATA_PATH, f"{data_type}_test_dataset_{model}.pt")
+        train_dataset_path = os.path.join(TWITTER_LM_DATA_PATH, f"{data_type}_train_dataset_{model}.pt")
+        val_dataset_path = os.path.join(TWITTER_LM_DATA_PATH, f"{data_type}_val_dataset_{model}.pt")
+        test_dataset_path = os.path.join(TWITTER_LM_DATA_PATH, f"{data_type}_test_dataset_{model}.pt")
         torch.save(train_dataset, train_dataset_path)
         torch.save(val_dataset, val_dataset_path)
         torch.save(test_dataset, test_dataset_path)

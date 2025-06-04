@@ -15,7 +15,7 @@ from transformers import (
 )
 
 from app.utils.utility import compute_metrics
-from constants import LM_TRAINING_RESULT_PATH, device
+from constants import TWITTER_LM_TRAINING_RESULT_PATH, device
 
 
 def get_training_arguments(model="bert", learning_rate=1e-5, epochs=10):
@@ -27,7 +27,7 @@ def get_training_arguments(model="bert", learning_rate=1e-5, epochs=10):
     """
 
     training_args = TrainingArguments(
-        output_dir=os.path.join(LM_TRAINING_RESULT_PATH, f"./{model}_Results"),
+        output_dir=os.path.join(TWITTER_LM_TRAINING_RESULT_PATH, f"./{model}_Results"),
         eval_strategy="epoch",
         save_strategy="epoch",
         learning_rate=learning_rate,

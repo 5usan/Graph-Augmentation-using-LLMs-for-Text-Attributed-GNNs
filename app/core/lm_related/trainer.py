@@ -15,7 +15,7 @@ from app.models.language_models import (
     distilbert_model,
     roberta_model,
 )
-from constants import LM_DATA_PATH, LANGUAGE_MODEL_PATH
+from constants import TWITTER_LM_DATA_PATH, TWITTER_LANGUAGE_MODEL_PATH
 
 
 def train(
@@ -31,13 +31,13 @@ def train(
     """
     try:
         train_dataset = torch.load(
-            os.path.join(LM_DATA_PATH, f"{data_type}_train_dataset_{model_name}.pt")
+            os.path.join(TWITTER_LM_DATA_PATH, f"{data_type}_train_dataset_{model_name}.pt")
         )
         val_dataset = torch.load(
-            os.path.join(LM_DATA_PATH, f"{data_type}_val_dataset_{model_name}.pt")
+            os.path.join(TWITTER_LM_DATA_PATH, f"{data_type}_val_dataset_{model_name}.pt")
         )
         test_dataset = torch.load(
-            os.path.join(LM_DATA_PATH, f"{data_type}_test_dataset_{model_name}.pt")
+            os.path.join(TWITTER_LM_DATA_PATH, f"{data_type}_test_dataset_{model_name}.pt")
         )
 
         # training_args = get_training_arguments(model, learning_rate, epochs)
@@ -65,7 +65,7 @@ def train(
                 f"Validation - Accuracy: {val_acc:.4f}, Recall: {val_recall:.4f}, F1: {val_f1:.4f}, Precision: {val_precision:.4f}"
             )
             # Save the model after each epoch
-        model_save_path = os.path.join(LANGUAGE_MODEL_PATH, f"{data_type}_{model_name}.pt")
+        model_save_path = os.path.join(TWITTER_LANGUAGE_MODEL_PATH, f"{data_type}_{model_name}.pt")
         print(f"Saving model to {model_save_path}...")
         torch.save(model.state_dict(), model_save_path)
         print(f"Model saved to {model_save_path}")

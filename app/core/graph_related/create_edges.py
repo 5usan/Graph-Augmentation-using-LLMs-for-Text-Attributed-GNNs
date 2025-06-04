@@ -4,7 +4,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 from app.utils.utility import create_csv, get_data
 from app.core.prompt_related.llm_api import predict_label
-from constants.constants import EDGE_PATH
+from constants.constants import TWITTER_EDGE_PATH
 
 
 def build_edges(data, feature_embeddings, threshold=0.5):
@@ -36,7 +36,7 @@ def build_edges(data, feature_embeddings, threshold=0.5):
         edges_df = pd.DataFrame(edges, columns=["source", "target"])
         create_csv(
             edges_df,
-            os.path.join(EDGE_PATH, f"edges_cosine_similarity_{threshold}.csv"),
+            os.path.join(TWITTER_EDGE_PATH, f"edges_cosine_similarity_{threshold}.csv"),
         )
         print("Edges built successfully.")
         return edges
@@ -63,13 +63,13 @@ def build_edges_by_predicting_labels(
     """
     predicted_values = []
     PREDICTED_GENDER_VALUES_PATH = os.path.join(
-        EDGE_PATH, f"predicted_{label}_values.csv"
+        TWITTER_EDGE_PATH, f"predicted_{label}_values.csv"
     )
 
     PREDICTED_EDGE_PATH_WITH_THRESHOLD = os.path.join(
-        EDGE_PATH, f"edges_{label}_prediction_{threshold}.csv"
+        TWITTER_EDGE_PATH, f"edges_{label}_prediction_{threshold}.csv"
     )
-    PREDICTED_EDGE_PATH = os.path.join(EDGE_PATH, f"edges_{label}_prediction.csv")
+    PREDICTED_EDGE_PATH = os.path.join(TWITTER_EDGE_PATH, f"edges_{label}_prediction.csv")
     try:
         print(f"model: {model}")
         similarity_matrix = cosine_similarity(feature_embeddings.to("cpu"))
@@ -143,7 +143,7 @@ def build_edges_by_predicting_labels(
         edges_df = pd.DataFrame(edges, columns=["source", "target"])
         create_csv(
             edges_df,
-            os.path.join(EDGE_PATH, f"edges_{label}_prediction_{threshold}.csv"),
+            os.path.join(TWITTER_EDGE_PATH, f"edges_{label}_prediction_{threshold}.csv"),
         )
         return edges
     except Exception as e:
