@@ -59,3 +59,26 @@ def predict_label(data, feature_index_1, model="deepseek-r1:8b", label="gender")
         return return_value
     except Exception as e:
         print("An error occured while predicting labels", {e})
+
+
+def query_llm_for_node(question, model):
+    """Query the LLM model"""
+    try:
+        response = ollama.chat(
+            model=model,
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a helpful assistant in graph learning and graph theory.",
+                },
+                {"role": "user", "content": question},
+            ],
+            keep_alive="5m",
+            # format="json",
+            stream=False,
+            options={"temperature": 0},
+        )
+        content = response["message"]["content"]
+        return content
+    except Exception as e:
+        print("An error occured", e)
