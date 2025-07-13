@@ -88,8 +88,6 @@ def train_model(model, train_loader, optimizer):
         loss.backward()
         optimizer.step()
 
-        optimizer.step()
-
 
 def evaluate(model, loader):
     model.eval()
@@ -113,4 +111,52 @@ def evaluate(model, loader):
     print("Sample true: ", labels[:5].squeeze().cpu().numpy())
     # return accracy, recall, f1, precision
 
-    return accuracy_score(true, preds), recall_score(true, preds), f1_score(true, preds), precision_score(true, preds)
+    return (
+        accuracy_score(true, preds),
+        recall_score(true, preds),
+        f1_score(true, preds),
+        precision_score(true, preds),
+    )
+
+
+def train_mlp_model(model, train_loader, optimizer):
+    model.train()
+    for batch in train_loader:
+        optimizer.zero_grad()
+        # print(f"Batch: {batch}")
+        features, labels = batch
+        features = features.to(device)  # shape: (batch_size, input_dim)
+        labels = labels.to(device)  # shape: (batch_size,)
+        labels = labels.squeeze().float()  # Ensure labels are float for BCE loss
+        output = model(features, labels)
+        loss = output["loss"]
+        loss.backward()
+        optimizer.step()
+
+
+def evaluate_mlp(model, loader):
+    model.eval()
+    preds, true = [], []
+
+    with torch.no_grad():
+        for batch in loader:
+            features = batch[0].to(device)
+            labels = batch[1].to(device).float().unsqueeze(1)
+
+            output = model(features)
+            probs = torch.sigmoid(output["logits"])
+            pred = (probs > 0.5).long()
+
+            preds.extend(pred.cpu().numpy())
+            true.extend(labels.cpu().numpy())
+
+    print("Sample probs:", probs[:5].squeeze().cpu().numpy())
+    print("Sample pred: ", pred[:5].squeeze().cpu().numpy())
+    print("Sample true: ", labels[:5].squeeze().cpu().numpy())
+
+    return (
+        accuracy_score(true, preds),
+        recall_score(true, preds),
+        f1_score(true, preds),
+        precision_score(true, preds),
+    )

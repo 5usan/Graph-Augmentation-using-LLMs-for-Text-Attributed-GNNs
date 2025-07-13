@@ -188,7 +188,7 @@ def split_graph(data_type: str, refined: bool = False, train_ratio: float = 0.8)
         np.random.seed(seed)
 
         # Split the graph into train, validation and test sets
-        splitter = RandomNodeSplit(split="train_rest", num_val=0.2, num_test=0.2)
+        splitter = RandomNodeSplit(split="train_rest", num_val=0.1, num_test=0.1)
         splitted_graph_data = splitter(graph_data)
         print(f"Graph data after splitting: {splitted_graph_data}")
 
@@ -198,6 +198,12 @@ def split_graph(data_type: str, refined: bool = False, train_ratio: float = 0.8)
         )
 
         # Get text from the feature embeddings of training, validation and test set and save in csv file with labels
+        node_refined_data_path = os.path.join(
+            TWITTER_GRAPH_PATH, f"{data_type}_llm_query_with_results.csv"
+        )
+        if os.path.exists(node_refined_data_path):
+            node_refined_data = get_data(node_refined_data_path)
+            print(node_refined_data["answer"].tolist()[:5])
         if data_type == "twitter":
             preprocessed_data = get_data(TWITTER_PREPROCESSED_DATA)
         elif data_type == "geotext":
@@ -206,14 +212,25 @@ def split_graph(data_type: str, refined: bool = False, train_ratio: float = 0.8)
         train_indices = splitted_graph_data.train_mask.nonzero(as_tuple=True)[0]
         val_indices = splitted_graph_data.val_mask.nonzero(as_tuple=True)[0]
         test_indices = splitted_graph_data.test_mask.nonzero(as_tuple=True)[0]
-
-        train_texts = preprocessed_data.iloc[train_indices]["feature"].tolist()
+        train_texts = (
+            preprocessed_data.iloc[train_indices]["feature"].tolist()
+            if not refined
+            else node_refined_data.iloc[train_indices]["answer"].tolist()
+        )
         train_labels = preprocessed_data.iloc[train_indices]["label"].tolist()
 
-        val_texts = preprocessed_data.iloc[val_indices]["feature"].tolist()
+        val_texts = (
+            preprocessed_data.iloc[val_indices]["feature"].tolist()
+            if not refined
+            else node_refined_data.iloc[val_indices]["answer"].tolist()
+        )
         val_labels = preprocessed_data.iloc[val_indices]["label"].tolist()
 
-        test_texts = preprocessed_data.iloc[test_indices]["feature"].tolist()
+        test_texts = (
+            preprocessed_data.iloc[test_indices]["feature"].tolist()
+            if not refined
+            else node_refined_data.iloc[test_indices]["answer"].tolist()
+        )
         test_labels = preprocessed_data.iloc[test_indices]["label"].tolist()
 
         # Save the train, validation and test data in csv files
@@ -501,3 +518,43 @@ def generate_graph_with_new_features(data_type: str):
     except Exception as e:
         print(e)
         return {"error": str(e)}
+
+def create_custom_shot_train_mask(graph_data, num_shots=1):
+    """
+    Create a custom shot train mask for the graph data.
+
+    Args:
+        graph_data (Data): The graph data object containing node features and labels.
+        num_shots (int): The number of shots (examples) to use for each class.
+
+    Returns:
+        Data: The updated graph data with a custom shot train mask.
+    """
+    y = graph_data.y.squeeze().cpu().numpy()  # Get labels as numpy array
+    classes = set(y)  # Unique class labels
+    train_mask = graph_data.train_mask.clone()  # Clone the existing train mask
+    # I need the index of the nodes in the train mask that are true
+    true_indices = train_mask.nonzero().cpu().numpy().flatten()
+    train_node_with_classes = []
+    for each_node in true_indices:
+        train_node_with_classes.append(
+            {
+                "node_idx": each_node,
+                "class": y[each_node],
+            }
+        )
+    # Create a new train mask with the selected nodes
+    new_train_mask = torch.zeros_like(graph_data.train_mask)
+    for c in classes:
+        count = 0
+        for item in train_node_with_classes:
+            if count >= num_shots:
+                break
+            if item["class"] == c:
+                new_train_mask[item["node_idx"]] = True
+                count += 1
+    print(
+        f"Number of true values in new train mask: {new_train_mask.sum().item()}"
+    ) 
+    graph_data.train_mask = new_train_mask
+    return graph_data

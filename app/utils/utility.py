@@ -17,7 +17,7 @@ def get_data(file_path: str) -> pd.DataFrame:
         pd.DataFrame: DataFrame containing the raw data.
     """
     try:
-        data = pd.read_csv(file_path, encoding="ISO-8859-1")
+        data = pd.read_csv(file_path, encoding="utf-8")
         print(f"Data loaded successfully from {file_path}")
         return data
     except FileNotFoundError:

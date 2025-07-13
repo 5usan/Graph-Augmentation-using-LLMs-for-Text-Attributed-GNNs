@@ -163,6 +163,8 @@ def train_eval_model_endpoint(
     model_type: str = "gcn",
     epochs: int = 200,
     learning_rate: float = 0.01,
+    few_shot: bool = False,
+    number_of_shots: int = 1,
 ):
     """
     Endpoint to train and evaluate the GCN model.
@@ -179,7 +181,9 @@ def train_eval_model_endpoint(
                 "error": "Invalid model type. Supported types are 'gcn' and 'gat'. Defaulting to 'gcn'."
             }
 
-        train_eval_model(data_type, model_type, epochs, learning_rate)
+        train_eval_model(
+            data_type, model_type, epochs, learning_rate, few_shot, number_of_shots
+        )
         return {"message": "Model trained and evaluated successfully."}
     except Exception as e:
         print(e)

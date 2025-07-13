@@ -12,6 +12,7 @@ from transformers import (
 )
 
 from constants import device
+from app.core.graph_related.graph import get_feature_embeddings
 
 
 bert_tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
@@ -28,6 +29,8 @@ def tokenizer_function(texts, tokenizer):
     Returns:
         dict: A dictionary containing the tokenized inputs, suitable for model input.
     """
+    if tokenizer is None:
+        return get_feature_embeddings(texts)
     return tokenizer(
         texts,
         padding="max_length",
@@ -46,6 +49,8 @@ class CustomBertModel(nn.Module):
         self.classifier = nn.Linear(self.bert.config.hidden_size, 1)
         nn.init.xavier_uniform_(self.classifier.weight)
         nn.init.zeros_(self.classifier.bias)
+        #implement dropout
+        # self.dropout = nn.Dropout(p=0.3)
 
         self.loss_fn = nn.BCEWithLogitsLoss()
 
@@ -61,6 +66,28 @@ class CustomBertModel(nn.Module):
 
         return {"logits": logits, "loss": loss}
 
+#Basic Multi Layer Perceptron (MLP) model
+class MLP(nn.Module):
+    def __init__(self, input_dim, hidden_dim, output_dim):
+        super(MLP, self).__init__()
+        self.fc1 = nn.Linear(input_dim, hidden_dim)
+        self.relu = nn.ReLU()
+        self.fc2 = nn.Linear(hidden_dim, output_dim)
+
+    def forward(self, x, labels=None):
+        x = self.fc1(x)
+        x = self.relu(x)
+        x = self.fc2(x)
+
+        loss = None
+        if labels is not None:
+            loss_fn = nn.BCEWithLogitsLoss()
+            labels = labels.float().unsqueeze(1)
+            loss = loss_fn(x, labels)
+
+        return {"logits": x, "loss": loss}
+
+
 bert_config = BertConfig()
 bert_model = CustomBertModel( BertModel(bert_config)).to(device)
 
@@ -69,3 +96,15 @@ distilbert_model = CustomBertModel(DistilBertModel(distilbert_config)).to(device
 
 roberta_config = RobertaConfig()
 roberta_model = CustomBertModel(RobertaModel(roberta_config)).to(device)
+
+# Load pre-trained models
+pre_trained_bert = BertModel.from_pretrained('bert-base-uncased')
+pre_trained_bert_model = CustomBertModel(pre_trained_bert).to(device)
+
+pre_trained_distilbert = DistilBertModel.from_pretrained('distilbert-base-uncased')
+pre_trained_distilbert_model = CustomBertModel(pre_trained_distilbert).to(device)
+
+pre_trained_roberta = RobertaModel.from_pretrained('roberta-base')
+pre_trained_roberta_model = CustomBertModel(pre_trained_roberta).to(device)
+
+

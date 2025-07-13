@@ -1,13 +1,22 @@
 import os
 import torch
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
-
 from constants import TWITTER_GRAPH_PATH, TWITTER_GRAPH_MODEL_PATH, device
 from app.models.graph_models import GCN, GAT
+from app.core.graph_related.graph import create_custom_shot_train_mask
 
 
 # Training function
 def train(model, optimizer, loss_fn, graph_data):
+    """Train the GCN model on the graph data.
+    Args:
+        model: The GCN model to train.
+        optimizer: The optimizer for training.
+        loss_fn: The loss function for training.
+        graph_data: The graph data containing node features, edge indices, and masks.
+    Returns:
+        loss (float): The loss value after training.
+    """
     model.train()
     optimizer.zero_grad()
     out = model(graph_data.x, graph_data.edge_index)
@@ -22,6 +31,17 @@ def train(model, optimizer, loss_fn, graph_data):
 
 # Evaluation function
 def evaluate(graph_data, model, test=False):
+    """Evaluate the model on validation or test set.
+    Args:
+        graph_data: The graph data containing node features, edge indices, and masks.
+        model: The GCN model to evaluate.
+        test (bool): If True, evaluate on the test set; otherwise, evaluate on the validation set.
+    Returns:
+        acc (float): Accuracy of the model on the validation or test set.
+        precision (float): Precision of the model on the validation or test set.
+        recall (float): Recall of the model on the validation or test set.
+        f1 (float): F1 score of the model on the validation or test set.
+    """
     model.eval()  # Set model to evaluation mode
     with torch.no_grad():  # Disable gradient computation
 
@@ -54,7 +74,14 @@ def evaluate(graph_data, model, test=False):
         return acc, precision, recall, f1
 
 
-def train_eval_model(data_type: str, model_type: str = "gcn", epochs: int = 200, learning_rate: float = 0.01):
+def train_eval_model(
+    data_type: str,
+    model_type: str = "gcn",
+    epochs: int = 200,
+    learning_rate: float = 0.01,
+    few_shot: bool = False,
+    number_of_shots: int = 1,
+):
     """
     Train and evaluate the GCN model.
     Args:
@@ -77,16 +104,24 @@ def train_eval_model(data_type: str, model_type: str = "gcn", epochs: int = 200,
                 "Graph data is None. Please check if the graph was created and split correctly."
             )
             return None
+        # Create one-shot train mask if needed
+        graph_data = (
+            create_custom_shot_train_mask(graph_data, number_of_shots)
+            if few_shot
+            else graph_data
+        )
         input_dim = graph_data.num_node_features
         model = (
             GAT(input_dim, hidden_dim).to(device)
             if model_type == "gat"
             else GCN(input_dim, hidden_dim, output_dim).to(device)
         )
-        optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=5e-4)
+        optimizer = torch.optim.Adam(
+            model.parameters(), lr=learning_rate, weight_decay=5e-4
+        )
         loss_fn = torch.nn.BCEWithLogitsLoss()  # Binary classification loss
         best_val_acc = 0
-        patience = 50  # Stop if validation accuracy does not improve for 10 epochs
+        patience = 100  # Stop if validation accuracy does not improve for 10 epochs
         wait = 0
         saved_model_path = os.path.join(
             TWITTER_GRAPH_MODEL_PATH, f"{model_type}_{data_type}_model.pt"
